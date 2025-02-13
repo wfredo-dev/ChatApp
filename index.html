@@ -36,6 +36,9 @@
         margin: 10px auto;
         overflow-x: hidden;
         word-wrap: break-word;
+        > div {
+          margin: 0.5rem;
+        }
       }
       input,
       button {
@@ -166,10 +169,9 @@
           return null;
         }
       }
-
+      const userImages = {};
       socket.onmessage = async (event) => {
         const chatDiv = document.getElementById("chat");
-        // const typingIndicator = document.getElementById("typing-indicator");
 
         let messageData;
         if (event.data instanceof Blob) {
@@ -185,49 +187,45 @@
           parsedData = { type: "message", message: messageData };
         }
 
-        // if (parsedData.type === "typing" && parsedData.nickname !== nickname) {
-        //   typingIndicator.textContent = `${parsedData.nickname} is typing...`;
-        //   return;
-        // }
-
-        // if (parsedData.type === "stopped_typing") {
-        //   typingIndicator.textContent = "";
-        //   return;
-        // }
-
         // Create a new message element
         const messageElement = document.createElement("div"); // Change <p> to <div>
         messageElement.style.display = "flex"; // Use flexbox
         messageElement.style.alignItems = "center"; // Align text and image
-        messageElement.style.justifyContent = "space-between"; // Space elements
+        // Space elements
         messageElement.style.gap = "10px"; // Add space between text and image
-        messageElement.style.borderRadius = "10px"; // Add rounded corners
+        messageElement.style.borderRadius = "3rem"; // Add rounded corners
         messageElement.style.padding = "10px"; // Add padding
 
         let [sender, ...messageParts] = parsedData.message.split(": ");
         let messageText = messageParts.join(": ");
-
+        if (!userImages[sender]) {
+          userImages[sender] = await getRandomCatImage();
+        }
         // Fetch a cat image and insert it into the message
-        const catImageUrl = await getRandomCatImage();
+
         const imgElement = document.createElement("img");
-        imgElement.src = catImageUrl;
-        imgElement.alt = "Random Cat";
-        imgElement.style.width = "3rem"; // Adjust size as needed
-        imgElement.style.height = "3rem";
+        imgElement.src = userImages[sender]; // Use stored image
+        imgElement.alt = "User Image";
+        imgElement.style.width = "2rem"; // Adjust size as needed
+        imgElement.style.height = "2rem";
         imgElement.style.borderRadius = "50%"; // Rounded corners
 
         // Create a span for the message text
         const textElement = document.createElement("span");
-        textElement.innerHTML = `${messageText} &nbsp;: ${sender}`;
 
         // Append text first, then image (so image is on the right)
-        messageElement.appendChild(textElement);
-        messageElement.appendChild(imgElement); // Image appears on the right
+        // Image appears on the right
 
         if (sender === nickname) {
           messageElement.classList.add("user-message");
+          messageElement.appendChild(textElement);
+          messageElement.appendChild(imgElement);
+          textElement.innerHTML = `${messageText} &nbsp;: ${sender}`;
+        } else {
+          messageElement.appendChild(imgElement);
+          messageElement.appendChild(textElement);
+          textElement.innerHTML = ` ${sender} &nbsp;: ${messageText}`;
         }
-
         chatDiv.appendChild(messageElement);
       };
 
