@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat with Nicknames</title>
+    <title>WebChat-iwashuli</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -16,19 +16,24 @@
         overflow-y: scroll;
         margin: 10px auto;
         padding: 10px;
+        word-wrap: break-word;
+      }
+      #message,
+      .send {
+        height: 3rem;
       }
     </style>
   </head>
   <body>
-    <h2>Real-Time Chat with Nicknames</h2>
+    <h2>Usap Kayo dito</h2>
 
     <input type="text" id="nickname" placeholder="Enter your nickname..." />
-    <button onclick="setNickname()">Set Nickname</button>
+    <button onclick="setNickname()">Set</button>
 
     <div id="chat"></div>
 
     <input type="text" id="message" placeholder="Type a message..." disabled />
-    <button onclick="sendMessage()" disabled>Send</button>
+    <button class="send" onclick="sendMessage()" disabled>Send</button>
 
     <script>
       const socket = new WebSocket(
