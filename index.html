@@ -31,7 +31,10 @@
     <button onclick="sendMessage()" disabled>Send</button>
 
     <script>
-      const socket = new WebSocket("ws://localhost:3000");
+      const socket = new WebSocket(
+        "wss://chatapp-production-136a.up.railway.app"
+      );
+
       let nickname = "";
 
       function setNickname() {
