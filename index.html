@@ -4,37 +4,119 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WebChat-iwashuli</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=send"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'><path d='M288 64C64 64 0 160 0 272S80 448 176 448l8.4 0c24.2 0 46.4-13.7 57.2-35.4l23.2-46.3c4.4-8.8 13.3-14.3 23.2-14.3s18.8 5.5 23.2 14.3l23.2 46.3c10.8 21.7 33 35.4 57.2 35.4l8.4 0c96 0 176-64 176-176s-64-208-288-208zM96 256a64 64 0 1 1 128 0A64 64 0 1 1 96 256zm320-64a64 64 0 1 1 0 128 64 64 0 1 1 0-128z'/></svg>"
+    />
+
     <style>
+      @import url("https://fonts.googleapis.com/css2?family=Abel&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Pacifico&display=swap");
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
       body {
-        font-family: Arial, sans-serif;
+        font-family: "Abel", serif;
+        box-sizing: border-box;
         text-align: center;
       }
       #chat {
-        width: 300px;
+        display: flex;
+        flex-direction: column;
+        width: 330px;
         height: 300px;
-        border: 1px solid #ccc;
+        padding: 2rem;
         overflow-y: scroll;
         margin: 10px auto;
-        padding: 10px;
+        overflow-x: hidden;
         word-wrap: break-word;
       }
-      #message,
+      input,
+      button {
+        height: 2.5rem;
+        min-width: 4rem;
+        border-radius: 3px;
+      }
+      p {
+        padding: 0.7rem;
+        margin-bottom: 0.3rem;
+
+        background-color: rgba(78, 72, 72, 0.267);
+        border-radius: 3rem;
+        width: fit-content;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+
+        gap: 1rem;
+        overflow: hidden;
+        > div {
+          width: 100%;
+        }
+      }
+      .buttom {
+        padding: 1rem;
+      }
+      input {
+        border: 0.1rem solid rgba(0, 0, 0, 0.534);
+        padding-left: 0.8rem;
+      }
+      .user-message {
+        background-color: #4caf50; /* Green background for user's messages */
+        color: white;
+        align-self: flex-end; /* Align to the right */
+      }
+      h2 {
+        font-size: 2rem;
+        padding: 2rem;
+        background-color: rgb(68, 100, 247);
+        color: white;
+      }
+      h4 {
+        font-weight: 500;
+        font-size: 1.5rem;
+        padding: 0;
+      }
       .send {
-        height: 3rem;
+        border: none;
+        background-color: rgba(255, 255, 255, 0);
+        span {
+          fill: black;
+        }
+      }
+
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
       }
     </style>
   </head>
   <body>
-    <h2>Usap Kayo dito</h2>
-
-    <input type="text" id="nickname" placeholder="Enter your nickname..." />
-    <button onclick="setNickname()">Set</button>
-
-    <div id="chat"></div>
-
-    <input type="text" id="message" placeholder="Type a message..." disabled />
-    <button class="send" onclick="sendMessage()" disabled>Send</button>
-
+    <div class="container">
+      <h2>WebChat</h2>
+      <div>
+        <input type="text" id="nickname" placeholder="Enter your nickname..." />
+        <button onclick="setNickname()">Set</button>
+      </div>
+      <div id="chat"></div>
+      <div class="buttom">
+        <input
+          type="text"
+          id="message"
+          placeholder="Type a message..."
+          disabled
+        />
+        <button class="send" onclick="sendMessage()" disabled>
+          <span class="material-symbols-outlined"> send </span>
+        </button>
+      </div>
+    </div>
     <script>
       const socket = new WebSocket(
         "wss://chatapp-production-136a.up.railway.app"
@@ -48,7 +130,23 @@
 
         if (nickname) {
           socket.send(JSON.stringify({ type: "set_nickname", nickname }));
-          input.disabled = true;
+
+          // Hide the nickname input and button
+          input.style.display = "none";
+          document.querySelector(
+            "button[onclick='setNickname()']"
+          ).style.display = "none";
+
+          // Create and display the nickname in a <p>
+          const nicknameDisplay = document.createElement("h4");
+          nicknameDisplay.textContent = ` ${nickname}`;
+
+          // Append it to the container or chat area
+          document
+            .querySelector(".container")
+            .insertBefore(nicknameDisplay, document.getElementById("chat"));
+
+          // Show message input and send button
           document.getElementById("message").disabled = false;
           document.querySelector(
             "button[onclick='sendMessage()']"
@@ -56,15 +154,78 @@
         }
       }
 
+      async function getRandomCatImage() {
+        try {
+          const response = await fetch(
+            "https://api.thecatapi.com/v1/images/search"
+          );
+          const data = await response.json();
+          return data[0].url; // Extract the image URL
+        } catch (error) {
+          console.error("Failed to fetch cat image:", error);
+          return null;
+        }
+      }
+
       socket.onmessage = async (event) => {
         const chatDiv = document.getElementById("chat");
-        const messageElement = document.createElement("p");
+        // const typingIndicator = document.getElementById("typing-indicator");
 
+        let messageData;
         if (event.data instanceof Blob) {
-          const text = await event.data.text(); // Convert Blob to string
-          messageElement.textContent = text;
+          messageData = await event.data.text(); // Convert Blob to text
         } else {
-          messageElement.textContent = event.data; // If already a string
+          messageData = event.data;
+        }
+
+        let parsedData;
+        try {
+          parsedData = JSON.parse(messageData);
+        } catch (error) {
+          parsedData = { type: "message", message: messageData };
+        }
+
+        // if (parsedData.type === "typing" && parsedData.nickname !== nickname) {
+        //   typingIndicator.textContent = `${parsedData.nickname} is typing...`;
+        //   return;
+        // }
+
+        // if (parsedData.type === "stopped_typing") {
+        //   typingIndicator.textContent = "";
+        //   return;
+        // }
+
+        // Create a new message element
+        const messageElement = document.createElement("div"); // Change <p> to <div>
+        messageElement.style.display = "flex"; // Use flexbox
+        messageElement.style.alignItems = "center"; // Align text and image
+        messageElement.style.justifyContent = "space-between"; // Space elements
+        messageElement.style.gap = "10px"; // Add space between text and image
+        messageElement.style.borderRadius = "10px"; // Add rounded corners
+        messageElement.style.padding = "10px"; // Add padding
+
+        let [sender, ...messageParts] = parsedData.message.split(": ");
+        let messageText = messageParts.join(": ");
+
+        // Fetch a cat image and insert it into the message
+        const catImageUrl = await getRandomCatImage();
+        const imgElement = document.createElement("img");
+        imgElement.src = catImageUrl;
+        imgElement.alt = "Random Cat";
+        imgElement.style.width = "3rem"; // Adjust size as needed
+        imgElement.style.height = "3rem";
+        imgElement.style.borderRadius = "50%"; // Rounded corners
+
+        // Create a span for the message text
+        const textElement = document.createElement("span");
+        textElement.innerHTML = `${messageText} &nbsp;: ${sender}`;
+
+        // Append text first, then image (so image is on the right)
+        messageElement.appendChild(textElement);
+        messageElement.appendChild(imgElement); // Image appears on the right
+
+        if (sender === nickname) {
+          messageElement.classList.add("user-message");
         }
 
         chatDiv.appendChild(messageElement);
